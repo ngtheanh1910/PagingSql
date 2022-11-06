@@ -1,0 +1,32 @@
+CREATE DEFINER=`root`@`localhost` PROCEDURE `GetCustomersPageSearch`(
+	SearchTerm VARCHAR(100)
+   ,PageIndex INT
+   ,PageSize INT
+   ,OUT RecordCount INT
+)
+BEGIN
+       SET @RowNumber:=0;
+ 
+       CREATE TEMPORARY TABLE Results
+       SELECT @RowNumber:=@RowNumber+1 RowNumber
+              ,CustomerID
+             ,CompanyName
+             ,ContactName
+             ,ContactTitle
+             ,Address
+             ,City
+             ,Region
+             ,PostalCode
+             ,Country
+             ,Phone
+             ,Fax
+       FROM Customers
+       WHERE ContactName LIKE (SearchTerm + '%') OR SearchTerm ='';
+       
+       SET RecordCount =(SELECT COUNT(*) FROM Results);
+ 
+       SELECT * FROM Results
+       WHERE RowNumber BETWEEN(PageIndex -1) * PageSize + 1 AND(((PageIndex -1) * PageSize + 1) + PageSize) - 1;
+ 
+       DROP TEMPORARY TABLE Results;
+END

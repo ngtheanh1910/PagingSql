@@ -1,0 +1,130 @@
+﻿@model IEnumerable<Search_Page_MVC.Models.Customer>
+
+@{
+    Layout = null;
+    WebGrid webGrid = new WebGrid(source: Model, canSort: false, canPage: false);
+}
+
+<!DOCTYPE html>
+
+<html>
+<head>
+    <meta name="viewport" content="width=device-width" />
+
+    <title>Index</title>
+    <style type="text/css">
+        body {
+            font-family: Arial;
+            font-size: 10pt;
+        }
+
+        .Pager span {
+            text-align: center;
+            color: #999;
+            display: inline-block;
+            width: 20px;
+            background-color: #A1DCF2;
+            margin-right: 3px;
+            line-height: 150%;
+            border: 1px solid #3AC0F2;
+        }
+
+        .Pager a {
+             text-align: center;
+            display: inline-block;
+            width: 20px;
+            background-color: #3AC0F2;
+            color: #fff;
+            border: 1px solid #3AC0F2;
+            margin-right: 3px;
+            line-height: 150%;
+            text-decoration: none;
+        }             
+
+        table {
+            border: 1px solid #ccc;
+            border-collapse: collapse;
+        }
+
+        table th {
+            background-color: #F7F7F7;
+            color: #333;
+            font-weight: bold;
+        }
+
+        table th, table td {
+            padding: 5px;
+            border: 1px solid #ccc;
+            width: 150px;
+        }
+    </style>
+</head>
+<body>
+    <h4>Customers</h4>
+    <hr />
+    <input type="text" id="txtSearch" />
+    <input type="button" id="btnSearch" value="Search" />
+    <br /><br />
+    @webGrid.GetHtml(
+        htmlAttributes: new { @id = "WebGrid", @class = "Grid" },
+        columns: webGrid.Columns(
+                 webGrid.Column("CustomerID", "CustomerID"),
+                 webGrid.Column("ContactName", "ContactName"),
+                 webGrid.Column("City", "City"),
+                 webGrid.Column("Country", "Country")))
+
+    <br />
+    <div class="Pager"></div>
+    <script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/1.8.3/jquery.min.js"></script>
+    <script src="~/Scripts/ASPSnippets_Pager.min.js"></script>
+    <script type="text/javascript">
+        $(function () {
+            GetCustomers(1, $('#txtSearch').val().trim());
+        });
+        $("body").on("click", ".Pager .page", function () {
+            GetCustomers(parseInt($(this).attr('page')), $('#txtSearch').val().trim());
+        });
+        $("[id*=btnSearch]").live("click", function () {
+            GetCustomers(parseInt(1), $('#txtSearch').val().trim());
+        });
+        function GetCustomers(pageIndex, searchTerm) {
+            $.ajax({
+                type: "POST",
+                url: "/Home/AjaxMethod",
+                data: '{pageIndex: ' + pageIndex + ', searchTerm: "' + searchTerm + '"}',
+                contentType: "application/json; charset=utf-8",
+                dataType: "json",
+                success: OnSuccess,
+                failure: function (response) {
+                    alert(response.d);
+                },
+                error: function (response) {
+                    alert(response.d);
+                }
+            });
+        };
+        function OnSuccess(response) {
+            var model = response;
+            var row = $("#WebGrid tbody tr:last-child").clone(true);
+            $("#WebGrid tbody tr").remove();
+            $.each(model.Customers, function () {
+                var customer = this;
+                $("td", row).eq(0).html(customer.CustomerID);
+                $("td", row).eq(1).html(customer.ContactName);
+                $("td", row).eq(2).html(customer.City);
+                $("td", row).eq(3).html(customer.Country);
+                $("#WebGrid").append(row);
+                row = $("#WebGrid tbody tr:last-child").clone(true);
+            });
+
+            $(".Pager").ASPSnippets_Pager({
+                ActiveCssClass: "current",
+                PagerCssClass: "pager",
+                PageIndex: model.PageIndex,
+                PageSize: model.PageSize,
+                RecordCount: model.RecordCount
+            });
+        };
+    </script>
+</body>
+</html>
