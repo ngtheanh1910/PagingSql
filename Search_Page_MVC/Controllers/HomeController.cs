@@ -20,24 +20,67 @@ namespace Search_Page_MVC.Controllers
             return View(dummy);
         }
 
+        //[HttpPost]
+        //public JsonResult AjaxMethod(int pageIndex, string searchTerm)
+        //{
+        //    CustomerModel model = new CustomerModel();
+        //    model.SearchTerm = searchTerm;
+        //    model.PageIndex = pageIndex;
+        //    model.PageSize = 10;
+
+        //    List<Customer> customers = new List<Customer>();
+        //    string constring = ConfigurationManager.ConnectionStrings["constr"].ConnectionString;
+        //    using (MySqlConnection con = new MySqlConnection(constring))
+        //    {
+        //        using (MySqlCommand cmd = new MySqlCommand("GetCustomersPageSearch", con))
+        //        {
+        //            cmd.CommandType = CommandType.StoredProcedure;
+        //            cmd.Parameters.AddWithValue("@SearchTerm", model.SearchTerm);
+        //            cmd.Parameters.AddWithValue("@PageIndex", model.PageIndex);
+        //            cmd.Parameters.AddWithValue("@PageSize", model.PageSize);
+        //            cmd.Parameters.Add("@RecordCount", MySqlDbType.VarChar, 30);
+        //            cmd.Parameters["@RecordCount"].Direction = ParameterDirection.Output;
+        //            con.Open();
+        //            MySqlDataReader sdr = cmd.ExecuteReader();
+        //            while (sdr.Read())
+        //            {
+        //                customers.Add(new Customer
+        //                {
+        //                    CustomerID = sdr["CustomerID"].ToString(),
+        //                    ContactName = sdr["ContactName"].ToString(),
+        //                    City = sdr["City"].ToString(),
+        //                    Country = sdr["Country"].ToString()
+        //                });
+        //            }
+        //            con.Close();
+
+        //            model.Customers = customers;
+        //            model.RecordCount = Convert.ToInt32(cmd.Parameters["@RecordCount"].Value);
+        //        }
+        //    }
+
+        //    return Json(model);
+        //}
+
+
         [HttpPost]
-        public JsonResult AjaxMethod(int pageIndex, string searchTerm)
+        public JsonResult AjaxMethod(int pageIndex)
         {
             CustomerModel model = new CustomerModel();
-            model.SearchTerm = searchTerm;
             model.PageIndex = pageIndex;
             model.PageSize = 10;
 
+            var skip = (model.PageIndex - 1) * model.PageSize;
+            var take = model.PageSize;
             List<Customer> customers = new List<Customer>();
             string constring = ConfigurationManager.ConnectionStrings["constr"].ConnectionString;
             using (MySqlConnection con = new MySqlConnection(constring))
             {
-                using (MySqlCommand cmd = new MySqlCommand("GetCustomersPageSearch", con))
+                using (MySqlCommand cmd = new MySqlCommand("GetCustomersByLimit", con))
                 {
                     cmd.CommandType = CommandType.StoredProcedure;
-                    cmd.Parameters.AddWithValue("@SearchTerm", model.SearchTerm);
-                    cmd.Parameters.AddWithValue("@PageIndex", model.PageIndex);
-                    cmd.Parameters.AddWithValue("@PageSize", model.PageSize);
+                    cmd.Parameters.AddWithValue("@Skip", skip);
+                    cmd.Parameters.AddWithValue("@Take", take);
                     cmd.Parameters.Add("@RecordCount", MySqlDbType.VarChar, 30);
                     cmd.Parameters["@RecordCount"].Direction = ParameterDirection.Output;
                     con.Open();
